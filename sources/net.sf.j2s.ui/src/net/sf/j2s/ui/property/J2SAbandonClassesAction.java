@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.ui.dialogs.ElementTreeSelectionDialog;
 import org.eclipse.ui.dialogs.ISelectionStatusValidator;
-import org.eclipse.ui.views.navigator.ResourceSorter;
+import org.eclipse.ui.views.navigator.ResourceComparator;
 
 /**
  * @author zhou renjian
@@ -70,8 +70,9 @@ public class J2SAbandonClassesAction implements SelectionListener {
 				alreadyUpdated = true;
 			}
 		}
-			dialog.setInput(new J2SCategory(page.classpathModel, "Classes"));
-		dialog.setSorter(new ResourceSorter(ResourceSorter.NAME));
+		dialog.setInput(new J2SCategory(page.classpathModel, "Classes"));
+		//dialog.setSorter(new ResourceSorter(ResourceSorter.NAME));
+		dialog.setComparator(new ResourceComparator(ResourceComparator.NAME));
 
 		if (dialog.open() == Window.OK) {
 			Object[] expandedElements = page.viewer.getExpandedElements();

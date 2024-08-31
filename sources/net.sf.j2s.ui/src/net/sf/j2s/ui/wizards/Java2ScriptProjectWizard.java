@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import net.sf.j2s.core.Java2ScriptProjectNature;
 import net.sf.j2s.ui.classpath.IRuntimeClasspathEntry;
 import net.sf.j2s.ui.classpath.Resource;
 import net.sf.j2s.ui.launching.JavaRuntime;
@@ -203,13 +202,6 @@ public class Java2ScriptProjectWizard extends NewElementWizard implements IExecu
 	            e.printStackTrace();
 	        }
 	        
-	    	try {
-	    		Java2ScriptProjectNature pn = new Java2ScriptProjectNature();
-	    		pn.setProject(project);
-	    		pn.configure();
-	    	} catch (CoreException e) {
-	    		e.printStackTrace();
-	    	}
 	        try {
 				project.build(IncrementalProjectBuilder.CLEAN_BUILD, monitor);
 			} catch (CoreException e) {

@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
-import net.sf.j2s.core.Java2ScriptProjectNature;
 import net.sf.j2s.ui.classpath.Resource;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
@@ -188,28 +187,11 @@ public class J2SPropertyPage extends PropertyPage {
 	        IProgressMonitor monitor = null;
 	    	IJavaProject jproject = (IJavaProject) getElement();
 	        IProject project = jproject.getProject();
-	    	try {
-	    		Java2ScriptProjectNature pn = new Java2ScriptProjectNature();
-	    		pn.setProject(project);
-	    		pn.configure();
-	    	} catch (CoreException e) {
-	    		e.printStackTrace();
-	    	}
 	        try {
 				project.build(IncrementalProjectBuilder.CLEAN_BUILD, monitor);
 			} catch (CoreException e) {
 				e.printStackTrace();
 			}
-		} else {
-	    	IJavaProject jproject = (IJavaProject) getElement();
-	    	IProject project = jproject.getProject();
-	    	try {
-	    		Java2ScriptProjectNature pn = new Java2ScriptProjectNature();
-	    		pn.setProject(project);
-	    		pn.deconfigure();
-	    	} catch (CoreException e) {
-	    		e.printStackTrace();
-	    	}
 		}
 		return true;
 	}

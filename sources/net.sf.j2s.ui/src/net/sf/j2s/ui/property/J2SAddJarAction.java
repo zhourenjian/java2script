@@ -36,7 +36,7 @@ import org.eclipse.ui.dialogs.ElementTreeSelectionDialog;
 import org.eclipse.ui.dialogs.ISelectionStatusValidator;
 import org.eclipse.ui.model.WorkbenchContentProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.eclipse.ui.views.navigator.ResourceSorter;
+import org.eclipse.ui.views.navigator.ResourceComparator;
 
 /**
  * @author zhou renjian
@@ -99,8 +99,9 @@ public class J2SAddJarAction implements SelectionListener {
 		dialog.setTitle("Java2Script Resources Selection"); //$NON-NLS-1$
 		dialog.setMessage("Choose Java2Scrip resources (*.js and *.css)"); //$NON-NLS-1$
 		dialog.addFilter(filter);
-			dialog.setInput(root);
-		dialog.setSorter(new ResourceSorter(ResourceSorter.NAME));
+		dialog.setInput(root);
+		//dialog.setSorter(new ResourceSorter(ResourceSorter.NAME));
+		dialog.setComparator(new ResourceComparator(ResourceComparator.NAME));
 
 		if (dialog.open() == Window.OK) {
 			Object[] expandedElements = page.viewer.getExpandedElements();

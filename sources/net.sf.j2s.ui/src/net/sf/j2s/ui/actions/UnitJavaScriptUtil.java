@@ -12,13 +12,18 @@
 package net.sf.j2s.ui.actions;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import net.sf.j2s.ui.Java2ScriptUIPlugin;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -195,12 +200,29 @@ public class UnitJavaScriptUtil {
 				}
 				parent = parent.getParent();
 			}
-			IPath outputLocation = null;
+			String outputLocation = null;
 			try {
-				outputLocation = javaProject.getOutputLocation();
+				outputLocation = javaProject.getOutputLocation().toString();
 			} catch (JavaModelException e) {
 				e.printStackTrace();
 			}
+			String prjFolder = javaProject.getPath().toOSString();
+			File file = new File(prjFolder, ".j2s"); //$NON-NLS-1$
+			if (file.exists()) {
+				Properties props = new Properties();
+				try {
+					props.load(new FileInputStream(file));
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				String binRelativeFolder = props.getProperty("j2s.output.path");
+				if (binRelativeFolder != null && binRelativeFolder.length() > 0) {
+					outputLocation = prjFolder + "/" + binRelativeFolder;
+				}
+			}
+
 			if (outputLocation != null && relativePath != null) {
 				relativePath = outputLocation
 						+ relativePath.substring(0, relativePath
@@ -212,8 +234,14 @@ public class UnitJavaScriptUtil {
 	}
 
 	public static boolean isUnitJSExisted(ICompilationUnit unit) {
-		File file = new File(unit.getJavaModel().getResource()
-				.getLocation().toOSString(), getRelativeJSPath(unit));
+		if (unit == null) return false;
+		IJavaModel javaModel = unit.getJavaModel();
+		if (javaModel == null) return false;
+		IResource resource = javaModel.getResource();
+		if (resource == null) return false;
+		IPath location = resource.getLocation();
+		if (location == null) return false;
+		File file = new File(location.toOSString(), getRelativeJSPath(unit));
 		return file.exists();
 	}
 	public static void popupError() {

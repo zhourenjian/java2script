@@ -740,7 +740,7 @@ public class J2SConfigPage extends Composite {
 	public boolean setFocus() {
 		if (compilerEnabled) {
 			ISelection selection = viewer.getSelection();
-			if (selection == null || selection.isEmpty()) {
+			if (classpathModel != null && (selection == null || selection.isEmpty())) {
 				viewer.setSelection(new StructuredSelection(classpathModel.getCategories()[0]));
 			}
 			viewer.getControl().setFocus();

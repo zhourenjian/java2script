@@ -341,28 +341,32 @@ public class DependencyASTVisitor extends ASTEmptyVisitor {
 
 
 	public boolean isNodeInMustPath(ASTNode node) {
-		// Add more class dependencies in musts will make classloader running
-		// into stack call limit reached.
-		// Temporary disable this bug fix.
-		/*
 		if (node == null) return false;
 		do {
 			if (node instanceof TypeDeclaration) {
 				return false;
 			}
-			if (node instanceof MethodDeclaration) {
+			// Add more class dependencies in musts will make classloader running
+			// into stack call limit reached.
+			// Temporary disable this bug fix.
+			/*
+			if (node instanceof MethodDeclaration && getJ2STag((MethodDeclaration) node, "@j2sIgnore") == null) {
 				MethodDeclaration m = (MethodDeclaration) node;
 				return m.isConstructor();
 			}
-			if (node instanceof FieldDeclaration) {
+			if (node instanceof FieldDeclaration && getJ2STag((FieldDeclaration) node, "@j2sIgnore") == null) {
 				return true;
 			}
+			// */
 			if (node instanceof Initializer) {
-				return true;
+				Initializer init = (Initializer) node;
+				if (getJ2STag(init, "@j2sIgnore") == null
+						&& (init.getModifiers() & Modifier.STATIC) != 0) {
+					return true;
+				}
 			}
 			node = node.getParent();
 		} while (node != null);
-		// */
 		return false;
 	}
 	

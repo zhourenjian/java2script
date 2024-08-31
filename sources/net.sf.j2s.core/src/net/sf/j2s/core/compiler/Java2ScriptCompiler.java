@@ -14,7 +14,7 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.sf.j2s.core.Java2ScriptProjectNature;
+//import net.sf.j2s.core.Java2ScriptProjectNature;
 import net.sf.j2s.core.astvisitors.ASTJ2SMapVisitor;
 import net.sf.j2s.core.astvisitors.ASTScriptVisitor;
 import net.sf.j2s.core.astvisitors.ASTVariableVisitor;
@@ -22,24 +22,22 @@ import net.sf.j2s.core.astvisitors.DependencyASTVisitor;
 import net.sf.j2s.core.astvisitors.NameConvertItem;
 import net.sf.j2s.core.astvisitors.SWTDependencyASTVisitor;
 import net.sf.j2s.core.astvisitors.SWTScriptVisitor;
-import net.sf.j2s.core.builder.SourceFile;
-import net.sf.j2s.core.builder.SourceFileProxy;
 import net.sf.j2s.core.hotspot.InnerHotspotServer;
 
 import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
-import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IPackageDeclaration;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
-import org.eclipse.jdt.internal.core.JavaProject;
 
-public class Java2ScriptCompiler implements IExtendedCompiler {
+public class Java2ScriptCompiler {
 
-	public void process(ICompilationUnit sourceUnit, IContainer binaryFolder) {
+	public static void process(IFile sourceFile, IContainer binaryFolder) {
 		final IProject project = binaryFolder.getProject();
 		/*
 		synchronized (project) {
@@ -88,51 +86,71 @@ public class Java2ScriptCompiler implements IExtendedCompiler {
 			e1.printStackTrace();
 		}
 
-		String binFolder = binaryFolder.getLocation().toOSString();
+		String binRelativeFolder = props.getProperty("j2s.output.path");
+		String binFolder = null;
+		if (binRelativeFolder == null || binRelativeFolder.length() == 0) {
+			binFolder = binaryFolder.getLocation().toOSString();
+			binRelativeFolder = binaryFolder.getProjectRelativePath().toPortableString();
+			props.setProperty("j2s.output.path", binRelativeFolder);
+		} else if (binRelativeFolder.startsWith("/")){
+			binFolder = binRelativeFolder;
+		} else {
+			binFolder = new File(prjFolder, binRelativeFolder).getAbsolutePath();
+		}
 		
-		List list = null;
+		List<String> list = null;
 		String resPaths = props.getProperty("j2s.resources.list");
 		if (resPaths == null || resPaths.trim().length() == 0) {
-			list = new ArrayList();
+			list = new ArrayList<String>();
 		} else {
 			String[] splits = resPaths.split(",");
 			//list = Arrays.asList(splits);
-			list = new ArrayList();
+			list = new ArrayList<String>();
 			for (int i = 0; i < splits.length; i++) {
 				list.add(splits[i]);
 			}
 		}
-		List abandonedList = null;
+		List<String> abandonedList = null;
 		String abandonedPaths = props.getProperty("j2s.abandoned.resources.list");
 		if (abandonedPaths == null || abandonedPaths.trim().length() == 0) {
-			abandonedList = new ArrayList();
+			abandonedList = new ArrayList<String>();
 		} else {
 			String[] splits = abandonedPaths.split(",");
 			//list = Arrays.asList(splits);
-			abandonedList = new ArrayList();
+			abandonedList = new ArrayList<String>();
 			for (int i = 0; i < splits.length; i++) {
 				abandonedList.add(splits[i]);
 			}
 		}
-			if (sourceUnit instanceof SourceFile) {
-				SourceFile unitSource = (SourceFile) sourceUnit;
-				String fileName = new String(unitSource.getFileName());
+		ICompilationUnit sourceUnit = JavaCore.createCompilationUnitFrom(sourceFile);
+//			if (sourceUnit instanceof SourceFile) {
+//				SourceFile unitSource = (SourceFile) sourceUnit;
+				String fileName = new String(sourceFile.getName());
 				int idx = fileName.lastIndexOf('/');
 				String className = fileName.substring(idx + 1, fileName.lastIndexOf('.'));
-				StringBuffer path = new StringBuffer();
-				char[][] pkgs = unitSource.getPackageName();
-				for (int j = 0; j < pkgs.length; j++) {
-					path.append(new String(pkgs[j]));
-					path.append("/");
+				StringBuffer pathSB = new StringBuffer();
+				try {
+					IPackageDeclaration[] pkgs = sourceUnit.getPackageDeclarations();
+					if (pkgs != null) {
+						//char[][] pkgs = unitSource.getPackageName();
+						for (int j = 0; j < pkgs.length; j++) {
+							//pathSB.append(new String(pkgs[j]));
+							pathSB.append(pkgs[j].getElementName());
+							pathSB.append("/");
+						}
+					}
+				} catch (JavaModelException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
 				}
-				path.append(className);
-				path.append(".js");
-				String jsPath = binaryFolder.getProjectRelativePath().toPortableString() + "/" + path.toString();
+				pathSB.append(className);
+				pathSB.append(".js");
+				String jsPath = binRelativeFolder + "/" + pathSB.toString();
 				if (!list.contains(jsPath) && !abandonedList.contains(jsPath)) {
 					list.add(jsPath);
 				}
 				//System.out.println(jsPath);
-			}
+//			}
 		StringBuffer buf = new StringBuffer();
 		for (Iterator iter = list.iterator(); iter.hasNext();) {
 			String path = (String) iter.next();
@@ -142,7 +160,7 @@ public class Java2ScriptCompiler implements IExtendedCompiler {
 			}
 		}
 		props.setProperty("j2s.resources.list", buf.toString());
-		props.setProperty("j2s.output.path", binaryFolder.getProjectRelativePath().toPortableString());
+		//props.setProperty("j2s.output.path", binaryFolder.getProjectRelativePath().toPortableString());
 		try {
 			props.store(new FileOutputStream(file), "Java2Script Configuration");
 		} catch (IOException e) {
@@ -151,32 +169,31 @@ public class Java2ScriptCompiler implements IExtendedCompiler {
 		}
 
 		CompilationUnit root;
-		ASTParser astParser= ASTParser.newParser(AST.JLS3);
-			if (sourceUnit instanceof SourceFile) {
-				//System.out.println(sourceUnits[i]);
-				SourceFile unitSource = (SourceFile) sourceUnit;
-				org.eclipse.jdt.core.ICompilationUnit createdUnit = JavaCore.createCompilationUnitFrom(new SourceFileProxy(unitSource).getResource());
+		ASTParser astParser= ASTParser.newParser(AST.JLS4);
+//			if (sourceUnit instanceof SourceFile) {
+//				//System.out.println(sourceUnits[i]);
+//				SourceFile unitSource = (SourceFile) sourceUnit;
 				astParser.setResolveBindings(true);
-				astParser.setSource(createdUnit);
+				astParser.setSource(sourceUnit);
 				root = (CompilationUnit) astParser.createAST(null);
 				
 				DependencyASTVisitor dvisitor = null;
 				String visitorID = props.getProperty("j2s.compiler.visitor");
-				IExtendedVisitor extVisitor = null;
+				//IExtendedVisitor extVisitor = null;
 				if ("ASTScriptVisitor".equals(visitorID)) {
 					dvisitor = new DependencyASTVisitor();
-				} else if ("SWTScriptVisitor".equals(visitorID)) {
+				} else { //if ("SWTScriptVisitor".equals(visitorID)) {
 					dvisitor = new SWTDependencyASTVisitor();
-				} else {
-					if (visitorID != null && visitorID.length() != 0) {
-						extVisitor = ExtendedVisitors.getExistedVisitor(visitorID);
-						if (extVisitor != null) {
-							dvisitor = extVisitor.getDependencyVisitor();
-						}
-					}
-					if (dvisitor == null) {
-						dvisitor = new SWTDependencyASTVisitor();
-					}
+//				} else {
+//					if (visitorID != null && visitorID.length() != 0) {
+//						extVisitor = ExtendedVisitors.getExistedVisitor(visitorID);
+//						if (extVisitor != null) {
+//							dvisitor = extVisitor.getDependencyVisitor();
+//						}
+//					}
+//					if (dvisitor == null) {
+//						dvisitor = new SWTDependencyASTVisitor();
+//					}
 				}
 				boolean errorOccurs = false;
 				try {
@@ -208,15 +225,15 @@ public class Java2ScriptCompiler implements IExtendedCompiler {
 				ASTScriptVisitor visitor = null;
 				if ("ASTScriptVisitor".equals(visitorID)) {
 					visitor = new ASTScriptVisitor();
-				} else if ("SWTScriptVisitor".equals(visitorID)) {
+				} else { // if ("SWTScriptVisitor".equals(visitorID)) {
 					visitor = new SWTScriptVisitor();
-				} else {
-					if (extVisitor != null) {
-						visitor = extVisitor.getScriptVisitor();
-					}
-					if (visitor == null) {
-						visitor = new SWTScriptVisitor();
-					}
+//				} else {
+//					if (extVisitor != null) {
+//						visitor = extVisitor.getScriptVisitor();
+//					}
+//					if (visitor == null) {
+//						visitor = new SWTScriptVisitor();
+//					}
 				}
 				boolean ignoreMethodOverloading = !("enable".equals(props.getProperty("j2s.compiler.method.overloading")));
 				visitor.setSupportsMethodOverloading(!ignoreMethodOverloading);
@@ -260,7 +277,7 @@ public class Java2ScriptCompiler implements IExtendedCompiler {
 						}
 					}
 				}
-			}
+			//}
 	}
 
 	public static void updateJ2SMap(String prjFolder) {

@@ -10,16 +10,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import net.sf.j2s.core.astvisitors.DependencyASTVisitor;
-import net.sf.j2s.core.builder.SourceFile;
-import net.sf.j2s.core.builder.SourceFileProxy;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.core.builder.SourceFile;
 
-public class J2SDependencyCompiler implements IExtendedCompiler {
+public class J2SDependencyCompiler {
 
 	public void process(ICompilationUnit sourceUnit, IContainer binaryFolder) {
 		String prjFolder = binaryFolder.getProject().getLocation().toOSString();
@@ -108,7 +107,7 @@ public class J2SDependencyCompiler implements IExtendedCompiler {
 		ASTParser astParser= ASTParser.newParser(AST.JLS3);
 			if (sourceUnit instanceof SourceFile) {
 				SourceFile unitSource = (SourceFile) sourceUnit;
-				org.eclipse.jdt.core.ICompilationUnit createdUnit = JavaCore.createCompilationUnitFrom(new SourceFileProxy(unitSource).getResource());
+				org.eclipse.jdt.core.ICompilationUnit createdUnit = JavaCore.createCompilationUnitFrom(unitSource.resource);
 				astParser.setResolveBindings(true);
 				astParser.setSource(createdUnit);
 				root = (CompilationUnit) astParser.createAST(null);

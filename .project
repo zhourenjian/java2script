@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+  <name>Java2Script</name>
+  <comment>Java2Script: Java to JavaScript</comment>
+  <projects/>
+  <buildSpec>
+    <buildCommand>
+    </buildCommand>
+  </buildSpec>
+  <natures>
+  </natures>
+</projectDescription>
